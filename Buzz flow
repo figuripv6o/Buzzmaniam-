@@ -1,0 +1,85 @@
+BUZZFLOW — AUTO WORKFLOW (PUSH • PULL • MERGE) — ONE SHOT
+PROJECT: Buzzmaniam
+=======================================================
+
+# ---------- LOCAL ONE-SHOT SCRIPT ----------
+# save as: buzzflow.sh
+#!/bin/bash
+set -e
+
+BRANCH="main"
+MSG="BuzzFlow auto update"
+
+echo "[BuzzFlow] pull latest"
+git pull origin $BRANCH || true
+
+echo "[BuzzFlow] run pipeline"
+python3 android/artifact_scan.py
+python3 signals/signal_log.py
+python3 signals/detect_anomaly.py
+python3 core/regroup.py
+python3 core/policy_gate.py
+
+echo "[BuzzFlow] commit + push"
+git add .
+git commit -m "$MSG" || true
+git push origin $BRANCH
+
+echo "[BuzzFlow] complete"
+
+
+# ---------- ONE-TIME REPO INIT ----------
+git init
+git branch -M main
+git remote add origin https://github.com/YOURNAME/buzzmaniam.git
+chmod +x buzzflow.sh
+./buzzflow.sh
+
+
+# ---------- GITHUB ACTIONS: AUTO RUN + MERGE ----------
+# file: .github/workflows/buzzflow.yml
+name: BuzzFlow Auto
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  buzzflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Run BuzzFlow pipeline
+        run: |
+          python android/artifact_scan.py
+          python signals/signal_log.py
+          python signals/detect_anomaly.py
+          python core/regroup.py
+          python core/policy_gate.py
+
+      - name: Auto-commit results
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "BuzzFlow CI update"
+          branch: main
+
+
+# ---------- AUTO-MERGE SETTINGS (GITHUB UI) ----------
+# Settings → Pull Requests:
+# ✔ Allow auto-merge
+# ✔ Require BuzzFlow Auto check
+# ✔ Auto-delete branch after merge
+
+
+# ---------- RUN ----------
+./buzzflow.sh
+
+END — AUTO PUSH • PULL • MERGE
