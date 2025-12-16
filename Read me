@@ -1,0 +1,41 @@
+# Buzzmaniam
+
+**Buzzmaniam** is a **read-only, zero-trust analysis system** that inspects  
+**Android application artifacts** and **wireless broadcasts (BLE)** to detect:
+
+- Silent components
+- Identity inconsistencies
+- Spoofing indicators
+
+The system operates **without intrusion**, **without device control**, and **without accessing private data**.
+
+---
+
+## Core Principles
+- Read-only observation
+- Zero-trust assumptions
+- Artifact-first analysis
+- Signal correlation (no connections)
+- Policy-based decisions
+
+---
+
+## What It Analyzes
+- Android APK structure (DEX count, native libraries, permissions)
+- BLE broadcast metadata (public advertisements only)
+- Cross-source correlation for anomaly indicators
+
+---
+
+## What It Does NOT Do
+- No rooting
+- No pairing or authentication
+- No packet injection
+- No password, file, or contact access
+- No remote control
+
+---
+
+## Run (One Command)
+```bash
+bash run.sh
