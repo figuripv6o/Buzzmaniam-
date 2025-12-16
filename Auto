@@ -1,0 +1,42 @@
+BUZZFLOW — AUTO WORKFLOW (PUSH • PULL • MERGE) — ONE SHOT (UPDATED)
+PROJECT: Buzzmaniam
+===============================================================
+
+# =========================
+# LOCAL ONE-SHOT SCRIPT
+# =========================
+# save as: buzzflow.sh
+#!/bin/bash
+set -euo pipefail
+
+BRANCH="main"
+MSG="BuzzFlow auto update"
+PY="python3"
+
+echo "[BuzzFlow] ensure git repo"
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 || git init
+
+echo "[BuzzFlow] set branch"
+git branch -M "$BRANCH" || true
+
+echo "[BuzzFlow] fetch + pull (safe)"
+git remote get-url origin >/dev/null 2>&1 && git fetch origin || true
+git pull --rebase origin "$BRANCH" || true
+
+echo "[BuzzFlow] run pipeline"
+$PY android/artifact_scan.py
+$PY signals/signal_log.py
+$PY signals/detect_anomaly.py
+$PY core/regroup.py
+$PY core/policy_gate.py
+
+echo "[BuzzFlow] stage changes"
+git add -A
+
+echo "[BuzzFlow] commit (no-op safe)"
+git commit -m "$MSG" || echo "[BuzzFlow] nothing to commit"
+
+echo "[BuzzFlow] push"
+git remote get-url origin >/dev/null 2>&1 && git push origin "$BRANCH" || echo "[BuzzFlow] origin not set"
+
+echo "[BuzzFlow] complete"
